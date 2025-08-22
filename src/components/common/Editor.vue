@@ -161,8 +161,8 @@ function openBlockSelector() { // This function is still needed to emit the even
 }
 
 .delete-icon {
-  height: 1rem; /* h-4 */
-  width: 1rem; /* w-4 */
+  height: 1rem;
+  width: 1rem;
 }
 
 /* Removed add-block-section and add-block-button styles */

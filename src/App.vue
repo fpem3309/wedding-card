@@ -1,8 +1,9 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import Editor from './components/common/Editor.vue';
 import Preview from './components/common/Preview.vue';
-import BlockSelector from './components/common/BlockSelector.vue';
+import SidebarMenu from './components/common/SidebarMenu.vue';
+import BlockVariationsPanel from './components/common/BlockVariationsPanel.vue';
 
 // The single source of truth for the invitation content.
 const blocks = ref([
@@ -25,7 +26,23 @@ const blocks = ref([
   }
 ]);
 
-const showBlockSelector = ref(false); // State for BlockSelector visibility
+// State for BlockVariationsPanel
+const showVariationsPanel = ref(false);
+const selectedBlockTypeForVariations = ref(null); // This will now retain its value
+
+function openVariations(type) {
+  selectedBlockTypeForVariations.value = type; 
+  showVariationsPanel.value = true;
+}
+
+function toggleVariationsPanel() {
+  showVariationsPanel.value = !showVariationsPanel.value;
+  if (showVariationsPanel.value && selectedBlockTypeForVariations.value === null) {
+    // If opening and no type was previously selected (initial load/refresh), default to 'title'
+    selectedBlockTypeForVariations.value = 'title';
+  }
+  // IMPORTANT: Do NOT set selectedBlockTypeForVariations to null when closing
+}
 
 function addBlock(type) {
   const newBlock = {
@@ -37,8 +54,7 @@ function addBlock(type) {
   if (type === 'text') {
     newBlock.data.content = '새로운 텍스트 블록입니다.';
   } else if (type === 'gallery') {
-    newBlock.data.images = [
-    ];
+    newBlock.data.images = [];
   } else if (type === 'image') {
     newBlock.data.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600' viewBox='0 0 800 600'%3E%3Crect width='800' height='600' fill='%23e0e0e0'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='40' fill='%23888' text-anchor='middle' dominant-baseline='middle'%3EUpload Image%3C/text%3E%3C/svg%3E";
     newBlock.data.caption = '하나뿐인 소중한 순간';
@@ -51,7 +67,6 @@ function addBlock(type) {
   }
 
   blocks.value.push(newBlock);
-  // showBlockSelector.value = false; // Do not close selector after adding
 }
 
 function deleteBlock(id) {
@@ -61,33 +76,51 @@ function deleteBlock(id) {
   }
 }
 
-function toggleBlockSelector() {
-  showBlockSelector.value = !showBlockSelector.value;
+function updateBlocks(newBlocks) {
+  blocks.value = newBlocks;
 }
 </script>
 
 <template>
   <div class="app-container">
-    <!-- Left: Editor Panel -->
-    <div :class="['editor-panel', { 'sidebar-open-offset': showBlockSelector }]">
-      <Editor :blocks="blocks" @add-block="addBlock" @delete-block="deleteBlock" @open-block-selector="toggleBlockSelector" />
-    </div>
+    <!-- Sidebar Menu (Leftmost) -->
+    <SidebarMenu 
+      @open-block-variations="openVariations" 
+      :current-view="selectedBlockTypeForVariations" 
+    />
 
-    <!-- Right: Preview Area -->
-    <div class="preview-area">
-      <Preview :blocks="blocks" />
-    </div>
+    <!-- Block Variations Panel (Next to Sidebar, always in DOM, width controlled by class) -->
+    <BlockVariationsPanel 
+      :is-open="showVariationsPanel" 
+      :block-type="selectedBlockTypeForVariations"
+      @add-block="addBlock"
+    />
 
-    <!-- Block Selector Sidebar -->
-    <Transition name="sidebar-transition">
-      <BlockSelector v-if="showBlockSelector" :is-open="showBlockSelector" @select-block-type="addBlock" @close="showBlockSelector = false" />
-    </Transition>
-
-    <!-- Toggle Button for Block Selector -->
-    <button @click="toggleBlockSelector" :class="['toggle-sidebar-button', { 'is-open': showBlockSelector }]">
-      <span v-if="showBlockSelector">&lt;</span>
+    <!-- Toggle Button for Block Variations Panel -->
+    <button 
+      @click="toggleVariationsPanel" 
+      :class="['toggle-variations-panel-button', { 'is-open': showVariationsPanel }]">
+      <span v-if="showVariationsPanel">&lt;</span>
       <span v-else>&gt;</span>
     </button>
+
+    <!-- Main Content Area (Editor + Preview) -->
+    <div class="main-content-area">
+      <!-- Editor Panel -->
+      <div class="editor-panel">
+        <Editor 
+          :blocks="blocks" 
+          @add-block="addBlock" 
+          @delete-block="deleteBlock"
+          @update:blocks="updateBlocks"
+        />
+      </div>
+
+      <!-- Preview Area -->
+      <div class="preview-area">
+        <Preview :blocks="blocks" />
+      </div>
+    </div>
   </div>
 </template>
 
@@ -95,54 +128,41 @@ function toggleBlockSelector() {
 .app-container {
   display: flex;
   height: 100vh;
-  background: linear-gradient(to bottom right, #e0f2fe, #ede9fe); /* from-blue-50 to-purple-50 */
-  font-family: sans-serif; /* font-sans */
-  color: #2d3748; /* text-gray-800 */
+  background: linear-gradient(to bottom right, #f0f4f8, #e6e9f0);
+  font-family: 'Pretendard', sans-serif;
+  color: #333;
+  position: relative; /* For positioning the toggle button */
+}
+
+.main-content-area {
+  display: flex;
+  flex: 1; /* Takes remaining space */
 }
 
 .editor-panel {
-  width: 24rem; /* w-96 */
-  background-color: white; /* bg-white */
-  /* overflow-y: auto; */ /* Removed to let inner container handle scroll */
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); /* shadow-xl */
+  width: 28rem; /* Fixed width for editor */
+  background-color: white;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
-  border-top-right-radius: 1rem; /* rounded-r-2xl */
-  border-bottom-right-radius: 1rem;
-  transition: transform 0.3s ease-out; /* Add transition */
-}
-
-.editor-panel.sidebar-open-offset {
-  transform: translateX(16rem); /* Push right by sidebar width */
+  border-right: 1px solid #e5e7eb;
+  z-index: 10;
 }
 
 .preview-area {
-  flex: 1;
+  flex: 1; /* Takes remaining space in main-content-area */
   display: flex;
-  /* align-items: center; */ /* Removed to allow scroll to top */
-  /* justify-content: center; */ /* Removed to allow scroll to top */
-  /* padding: 2rem; */ /* Moved to inner element in Preview.vue */
-  overflow-y: auto; /* Allow preview area to scroll */
+  justify-content: center;
+  overflow-y: auto;
+  padding: 2rem;
 }
 
-/* Transition for BlockSelector */
-.sidebar-transition-enter-active,
-.sidebar-transition-leave-active {
-  transition: opacity 0.3s ease-out, transform 0.3s ease-out;
-}
-
-.sidebar-transition-enter-from,
-.sidebar-transition-leave-to {
-  opacity: 0;
-  transform: translateX(-100%);
-}
-
-.toggle-sidebar-button {
-  position: fixed;
+.toggle-variations-panel-button {
+  position: absolute;
   top: 50%;
-  transform: translateY(-50%) translateX(0); /* Initial transform for vertical centering */
-  --translate-x-value: 0; /* Define CSS variable for translateX */
-  width: 3rem;
+  transform: translateY(-50%);
+  left: calc(5rem + 0px); /* SidebarMenu new width + 0px (when closed) */
+  width: 2rem;
   height: 3.5rem;
   background-color: #2563eb;
   color: white;
@@ -151,20 +171,23 @@ function toggleBlockSelector() {
   justify-content: center;
   font-size: 1.5rem;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
-  transition: transform 0.3s ease-out; /* Changed to transform transition */
-  z-index: 51;
-  clip-path: polygon(0 0, 100% 15%, 100% 85%, 0% 100%);
+  transition: left 0.3s ease-in-out; /* Transition for position */
+  z-index: 51; /* Above panels */
   border-top-right-radius: 0.5rem;
   border-bottom-right-radius: 0.5rem;
+  border: none;
+  cursor: pointer;
 }
 
-.toggle-sidebar-button.is-open {
-  transform: translateY(-50%) translateX(16rem); /* Move with sidebar */
-  --translate-x-value: 16rem; /* Update variable for open state */
+.toggle-variations-panel-button.is-open {
+  left: calc(5rem + 18rem); /* SidebarMenu width + BlockVariationsPanel width */
+  border-top-left-radius: 0.5rem; /* Change border radius when open */
+  border-bottom-left-radius: 0.5rem;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
 }
 
-.toggle-sidebar-button:hover {
+.toggle-variations-panel-button:hover {
   background-color: #1d4ed8;
-  transform: translateY(-50%) translateX(var(--translate-x-value)) scale(1.05); /* Use variable for translateX */
 }
 </style>
