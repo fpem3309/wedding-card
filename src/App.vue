@@ -38,12 +38,9 @@ function addBlock(type) {
     newBlock.data.content = '새로운 텍스트 블록입니다.';
   } else if (type === 'gallery') {
     newBlock.data.images = [
-      'https://via.placeholder.com/400/FFC0CB/000000?Text=Image+1',
-      'https://via.placeholder.com/400/ADD8E6/000000?Text=Image+2',
-      'https://via.placeholder.com/400/90EE90/000000?Text=Image+3',
     ];
   } else if (type === 'image') {
-    newBlock.data.src = 'https://via.placeholder.com/800x600/B0E0E6/000000?Text=My+Image';
+    newBlock.data.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600' viewBox='0 0 800 600'%3E%3Crect width='800' height='600' fill='%23e0e0e0'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='40' fill='%23888' text-anchor='middle' dominant-baseline='middle'%3EUpload Image%3C/text%3E%3C/svg%3E";
     newBlock.data.caption = '하나뿐인 소중한 순간';
   } else if (type === 'account') {
     newBlock.data.accounts = [

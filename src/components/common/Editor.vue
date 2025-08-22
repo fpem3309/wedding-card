@@ -111,32 +111,35 @@ function openBlockSelector() { // This function is still needed to emit the even
 
 .handle {
   position: absolute;
-  left: -2.5rem; /* More space from block */
+  left: 0; /* Align to the very right edge */
+  width: 0.5rem; /* Make it a thin bar */
   top: 50%;
   transform: translateY(-50%);
   cursor: grab;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  padding: 0.5rem; /* p-2 */
-  border-radius: 9999px; /* rounded-full */
-  background-color: #f3f4f6; /* bg-gray-100 */
+  opacity: 0; /* Hidden by default */
+  background-color: #cbd5e1; /* Subtle gray */
+  transition: opacity 0.3s ease; /* Smooth transition */
+  border-radius: 0; /* Remove border-radius for a bar */
+  padding: 0; /* Remove padding */
+  display: flex; /* Keep flex for centering icon if needed */
+  align-items: center;
+  justify-content: center;
 }
 
 .block-item-wrapper:hover .handle {
-  opacity: 1;
-  background-color: #e5e7eb; /* hover:bg-gray-200 */
+  opacity: 1; /* Visible on hover */
 }
 
 .handle-icon {
-  height: 1.25rem; /* h-5 */
-  width: 1.25rem; /* w-5 */
-  color: #6b7280; /* text-gray-500 */
+  height: 1rem; /* Smaller icon */
+  width: 1rem; /* Smaller icon */
+  color: #4b5563; /* Darker gray for icon */
 }
 
 .delete-button {
   position: absolute;
   top: 0.5rem; /* Adjusted for padding */
-  right: 0.5rem; /* Adjusted for padding */
+  right: 1.5rem; /* Move further left to avoid handle */
   z-index: 10;
   padding: 0.25rem; /* p-1 */
   background-color: #f8d7da; /* Very light red/pink */

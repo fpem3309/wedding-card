@@ -1,6 +1,13 @@
 <script setup>
 import { ref } from 'vue';
-import draggable from 'vuedraggable';
+// import draggable from 'vuedraggable'; // Remove draggable
+import { Swiper, SwiperSlide } from 'swiper/vue'; // Import Swiper components
+import { Pagination, Navigation } from 'swiper/modules'; // Import Swiper modules
+
+// Import Swiper styles
+import 'swiper/css';
+import 'swiper/css/pagination';
+import 'swiper/css/navigation';
 
 const props = defineProps({
   data: Object
@@ -41,21 +48,24 @@ function removeImage(index) {
     
     <input type="file" ref="fileInput" @change="handleFileUpload" multiple accept="image/*" class="file-input-hidden">
 
-    <draggable
+    <swiper
       v-if="data.images && data.images.length"
-      :list="data.images"
-      item-key="index"
-      class="image-grid"
+      :modules="[Pagination, Navigation]"
+      :slides-per-view="1"
+      :space-between="10"
+      navigation
+      :pagination="{ clickable: true }"
+      class="mySwiper"
     >
-      <template #item="{ element: imageUrl, index }">
-        <div class="image-grid-item">
+      <swiper-slide v-for="(imageUrl, index) in data.images" :key="index">
+        <div class="image-grid-item"> <!-- Keep this for styling individual images -->
           <img :src="imageUrl" class="image-thumbnail" alt="Gallery image">
           <button @click="removeImage(index)" class="remove-image-button">
             X
           </button>
         </div>
-      </template>
-    </draggable>
+      </swiper-slide>
+    </swiper>
     <div v-else class="no-image-placeholder">
       이미지를 추가해주세요.
     </div>
@@ -86,11 +96,25 @@ function removeImage(index) {
   display: none;
 }
 
+/* Remove .image-grid CSS */
+/*
 .image-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr)); /* grid-cols-3 */
-  gap: 0.5rem; /* gap-2 */
-  margin-bottom: 0.5rem; /* mb-2 */
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+*/
+
+/* Add Swiper specific styles if needed, e.g., to adjust height or width of .mySwiper */
+.mySwiper {
+  width: 100%;
+  height: 12rem; /* Example height, adjust as needed */
+  margin-bottom: 0.5rem;
+}
+
+.swiper-slide {
+  width: 100%;
 }
 
 .image-grid-item {
@@ -105,8 +129,8 @@ function removeImage(index) {
 
 .image-thumbnail {
   width: 100%;
-  height: 6rem; /* h-24 */
-  object-fit: cover;
+  height: 100%; /* Make image fill the slide */
+  object-fit: contain; /* or cover, depending on desired behavior */
 }
 
 .remove-image-button {
